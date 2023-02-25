@@ -3,7 +3,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const Post = require('./models/Post');
-var bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const uploadMiddleware = multer({dest: 'uploads/'});
@@ -11,7 +11,7 @@ const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const app = express();
 
-var salt = bcrypt.genSaltSync(10);
+const salt = bcrypt.genSaltSync(10);
 const secret = `${process.env.SECRET}`;
 
 app.use(cors({credentials:true,origin:'http://localhost:3000'}));
@@ -30,9 +30,10 @@ app.post('/register', async (req,res) => {
     });
     res.json(userDoc);
   } catch(e) {
+    console.log(e);
     res.status(400).json(e);
   }
-})
+});
 
 app.post('/login', async (req,res) => {
   const {username,password} = req.body;
@@ -45,8 +46,8 @@ app.post('/login', async (req,res) => {
         id: userDoc._id,
         username,
       });
-    })
-  } else{
+    });
+  } else {
     res.status(400).json('Incorrect credentials');
   }
 });
@@ -85,12 +86,48 @@ app.post('/post', uploadMiddleware.single('files'), async (req,res) => {
   });
 });
 
+app.put('/post', uploadMiddleware.single('file'), async (req,res) => {
+  let newPath = null;
+  if (req.file) {
+    const {originalname,path} = req.file;
+    const parts = originalname.split('.');
+    const ext = parts[parts.length - 1];
+    newPath = path+'.'+ext;
+    fs.renameSync(path, newPath);
+  }
+
+  const {token} = req.cookies;
+  jwt.verify(token, secret, {}, async (err,info) => {
+    if (err) throw err;
+    const {id,title,summary,content} = req.body;
+    const postDoc = await Post.findById(id);
+    const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
+    if (!isAuthor) {
+      return res.status(400).json('Editing is only allowed for the original author');
+    }
+    await postDoc.update({
+      title,
+      summary,
+      content,
+      img: newPath ? newPath : postDoc.img,
+    });
+
+    res.json(postDoc);
+  });
+
+});
 app.get('/post', async (req,res) => {
   res.json(await Post.find()
     .populate('author', ['username'])
     .sort({createdAt: -1})
     .limit(20)
   );
+});
+
+app.get('/post/:id', async (req,res) => {
+  const {id} = req.params;
+  const postDoc = await Post.findById(id).populate('author', ['username']);
+  res.json(postDoc);
 });
 
 app.listen(4000);
