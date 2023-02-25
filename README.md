@@ -10,3 +10,4 @@ Note to self, make sure you add IP address to approved list of IP addresses in m
 * express
 * react-quill
 * multer
+* date-fns

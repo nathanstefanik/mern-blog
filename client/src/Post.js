@@ -1,17 +1,18 @@
-export default function Post() {
+import {formatISO9075} from "date-fns";
+
+export default function Post({title,summary,img,content,createdAt,author}) {
   return (
     <div className="post">
       <div className="image">
-        <img src="https://media.newyorker.com/photos/601b5bbe9029cdf74e3e94b2/master/w_1600%2Cc_limit/210215_r37928.jpg" alt=""></img>
+        <img src={'http://localhost:4000/'+img} alt=""></img>
       </div>
       <div className="texts">
-        <h2>Stalker by Andrei Tarkovsky</h2>
+        <h2>{title}</h2>
         <p className="info">
-          <a className="author">Nathan Stefanik</a>
-          <time>2023-02-21 17:15</time>
+          <a className="author">{author.username}</a>
+          <time>{formatISO9075(new Date(createdAt))}</time>
         </p>
-        <p>Stalker is characterized by religious symbolism reflective of a soviet-era, post-apocalyptic 
-          universe viewed through a cold and watchful lens.</p>
+        <p className="summary">{summary}</p>
       </div>
     </div>
     );

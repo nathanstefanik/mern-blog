@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,linux,windows,react,reactnative,expressionengine,node,yarn
 
 .env
+api/uploads/*
 
 ### ExpressionEngine ###
 .DS_Store
